@@ -1,5 +1,5 @@
 #
-# Copyright 2016 Astronomer Inc.
+# Copyright 2020 Astronomer Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,11 +13,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#https://github.com/zalando/postgres-operator/tags
-FROM registry.opensource.zalan.do/acid/postgres-operator:v1.11.0
-LABEL maintainer="Astronomer <humans@astronomer.io>"
+# https://hub.docker.com/r/prometheuscommunity/postgres-exporter
+# https://github.com/prometheus-community/postgres_exporter/blob/v0.10.0/Dockerfile
+
+v0.15.0 quay.io/prometheuscommunity/postgres-exporter:v0.15.0 AS upstream
+
+FROM quay.io/astronomer/ap-base:3.18.6-2
 
 ARG BUILD_NUMBER=-1
 LABEL io.astronomer.docker=true
 LABEL io.astronomer.docker.build.number=$BUILD_NUMBER
-USER 1000
+LABEL maintainer="Astronomer <humans@astronomer.io>"
+
+COPY --from=upstream  /bin/postgres_exporter /bin/postgres_exporter
+COPY include/entrypoint /entrypoint
+COPY include/healthcheck /healthcheck
+
+USER 65534
+ENTRYPOINT [ "/entrypoint" ]
+
+
